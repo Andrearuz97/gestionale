@@ -1,12 +1,11 @@
 package com.gestionale.controller;
 
 import com.gestionale.dto.TrattamentoStatDTO;
-import com.gestionale.dto.DashboardRiepilogoDTO;
 import com.gestionale.service.PrenotazioneService;
 
-import java.util.List;
-
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
@@ -32,10 +31,5 @@ public class DashboardController {
     @GetMapping("/prenotazioni-per-trattamento")
     public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
         return prenotazioneService.getPrenotazioniPerTrattamento();
-    }
-
-    @GetMapping("/riepilogo")
-    public DashboardRiepilogoDTO getRiepilogoDashboard() {
-        return prenotazioneService.getRiepilogoDashboard();
     }
 }
