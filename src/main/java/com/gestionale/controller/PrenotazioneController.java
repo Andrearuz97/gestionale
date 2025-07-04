@@ -1,6 +1,10 @@
 package com.gestionale.controller;
 
+import com.gestionale.dto.PrenotazioneDTO;
 import com.gestionale.entity.Prenotazione;
+import com.gestionale.entity.Trattamento;
+import com.gestionale.enums.StatoPrenotazione;
+import com.gestionale.repository.TrattamentoRepository;
 import com.gestionale.service.PrenotazioneService;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,13 +17,26 @@ import java.util.List;
 public class PrenotazioneController {
 
     private final PrenotazioneService service;
+    private final TrattamentoRepository trattamentoRepository;
 
-    public PrenotazioneController(PrenotazioneService service) {
+    public PrenotazioneController(PrenotazioneService service, TrattamentoRepository trattamentoRepository) {
         this.service = service;
+        this.trattamentoRepository = trattamentoRepository;
     }
 
     @PostMapping
-    public Prenotazione creaPrenotazione(@RequestBody Prenotazione prenotazione) {
+    public Prenotazione creaPrenotazione(@RequestBody PrenotazioneDTO dto) {
+        Trattamento trattamento = trattamentoRepository.findById(dto.getTrattamentoId())
+                .orElseThrow(() -> new RuntimeException("Trattamento non trovato"));
+
+        Prenotazione prenotazione = new Prenotazione();
+        prenotazione.setNome(dto.getNome());
+        prenotazione.setTelefono(dto.getTelefono());
+        prenotazione.setDataOra(dto.getDataOra());
+        prenotazione.setNote(dto.getNote());
+        prenotazione.setTrattamento(trattamento);
+        prenotazione.setStato(StatoPrenotazione.CREATA); // default iniziale
+
         return service.salva(prenotazione);
     }
 

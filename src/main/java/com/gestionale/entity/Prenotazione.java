@@ -1,5 +1,6 @@
 package com.gestionale.entity;
 
+import com.gestionale.enums.StatoPrenotazione;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public class Prenotazione {
     private Long id;
 
     private String nome;
+
     private String telefono;
 
     @ManyToOne
@@ -26,4 +28,8 @@ public class Prenotazione {
     private LocalDateTime dataOra;
 
     private String note;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatoPrenotazione stato;
 }
