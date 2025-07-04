@@ -42,4 +42,9 @@ public class TrattamentoController {
     public void cancella(@PathVariable Long id) {
         service.cancella(id);
     }
+
+    @GetMapping("/cerca")
+    public List<Trattamento> cercaPerNome(@RequestParam String nome) {
+        return service.cercaPerNome(nome);
+    }
 }

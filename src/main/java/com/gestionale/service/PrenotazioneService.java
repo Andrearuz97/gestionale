@@ -10,8 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +26,6 @@ public class PrenotazioneService {
         if (repository.existsByTrattamento_IdAndDataOra(prenotazione.getTrattamento().getId(), prenotazione.getDataOra())) {
             throw new RuntimeException("Prenotazione già esistente per quel trattamento a quell'ora");
         }
-
         return repository.save(prenotazione);
     }
 
@@ -81,14 +79,10 @@ public class PrenotazioneService {
     }
 
     public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
-        Map<String, Long> conteggio = repository.findAll().stream()
-            .collect(Collectors.groupingBy(
-                p -> p.getTrattamento().getNome(),
-                Collectors.counting()
-            ));
-
-        return conteggio.entrySet().stream()
-            .map(e -> new TrattamentoStatDTO(e.getKey(), e.getValue()))
+        return repository.findAll().stream()
+            .collect(Collectors.groupingBy(p -> p.getTrattamento().getNome(), Collectors.counting()))
+            .entrySet().stream()
+            .map(entry -> new TrattamentoStatDTO(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
     }
 }

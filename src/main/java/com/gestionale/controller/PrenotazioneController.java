@@ -4,6 +4,7 @@ import com.gestionale.entity.Prenotazione;
 import com.gestionale.service.PrenotazioneService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -40,5 +41,21 @@ public class PrenotazioneController {
     @DeleteMapping("/{id}")
     public void cancella(@PathVariable Long id) {
         service.cancella(id);
+    }
+
+    @GetMapping("/cerca")
+    public List<Prenotazione> cercaPerNome(@RequestParam String nome) {
+        return service.cercaPerNome(nome);
+    }
+
+    @GetMapping("/giorno")
+    public List<Prenotazione> cercaPerData(@RequestParam String data) {
+        LocalDate giorno = LocalDate.parse(data);
+        return service.cercaPerData(giorno);
+    }
+
+    @GetMapping("/storico")
+    public List<Prenotazione> storico() {
+        return service.getStorico();
     }
 }

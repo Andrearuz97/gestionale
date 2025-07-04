@@ -3,9 +3,9 @@ package com.gestionale.controller;
 import com.gestionale.dto.TrattamentoStatDTO;
 import com.gestionale.service.PrenotazioneService;
 
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/dashboard")

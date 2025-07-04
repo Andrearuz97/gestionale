@@ -24,10 +24,14 @@ public class TrattamentoService {
     }
 
     public Trattamento getById(Long id) {
-        return repository.findById(id).orElse(null);
+        return repository.findById(id).orElseThrow(() -> new RuntimeException("Trattamento non trovato"));
     }
 
     public void cancella(Long id) {
         repository.deleteById(id);
+    }
+
+    public List<Trattamento> cercaPerNome(String nome) {
+        return repository.findByNomeContainingIgnoreCase(nome);
     }
 }
