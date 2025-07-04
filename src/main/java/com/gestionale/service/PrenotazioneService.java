@@ -2,6 +2,7 @@ package com.gestionale.service;
 
 import com.gestionale.entity.Prenotazione;
 import com.gestionale.repository.PrenotazioneRepository;
+import com.gestionale.dto.DashboardRiepilogoDTO;
 import com.gestionale.dto.TrattamentoStatDTO;
 
 import org.springframework.data.domain.Sort;
@@ -85,4 +86,21 @@ public class PrenotazioneService {
             .map(entry -> new TrattamentoStatDTO(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
     }
+    public DashboardRiepilogoDTO getRiepilogoDashboard() {
+        LocalDate oggi = LocalDate.now();
+        LocalDateTime inizioOggi = oggi.atStartOfDay();
+        LocalDateTime fineOggi = oggi.atTime(LocalTime.MAX);
+
+        long totalePrenotazioni = repository.count();
+        long prenotazioniOggi = repository.findByDataOraBetween(inizioOggi, fineOggi).size();
+        double incassoTotale = repository.findAll().stream()
+            .mapToDouble(p -> p.getTrattamento().getPrezzo())
+            .sum();
+        double incassoOggi = repository.findByDataOraBetween(inizioOggi, fineOggi).stream()
+            .mapToDouble(p -> p.getTrattamento().getPrezzo())
+            .sum();
+
+        return new DashboardRiepilogoDTO(totalePrenotazioni, prenotazioniOggi, incassoTotale, incassoOggi);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.gestionale.controller;
 
+import com.gestionale.dto.DashboardRiepilogoDTO;
 import com.gestionale.dto.TrattamentoStatDTO;
 import com.gestionale.service.PrenotazioneService;
 
@@ -32,4 +33,9 @@ public class DashboardController {
     public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
         return prenotazioneService.getPrenotazioniPerTrattamento();
     }
+    @GetMapping("/riepilogo")
+    public DashboardRiepilogoDTO getRiepilogoDashboard() {
+        return prenotazioneService.getRiepilogoDashboard();
+    }
+
 }
