@@ -1,8 +1,11 @@
 package com.gestionale.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gestionale.enums.StatoPrenotazione;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,4 +35,10 @@ public class Prenotazione {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatoPrenotazione stato;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    @JsonIgnoreProperties({"prenotazioni", "utente"}) // ✅ evita loop e permette serializzazione
+    private Cliente cliente;
+
 }

@@ -2,8 +2,8 @@ package com.gestionale.controller;
 
 import com.gestionale.entity.Trattamento;
 import com.gestionale.service.TrattamentoService;
-import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
