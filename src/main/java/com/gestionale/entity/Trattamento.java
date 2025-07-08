@@ -20,7 +20,9 @@ public class Trattamento {
 
     private String descrizione;
 
-    private double prezzo;
+    @Column(nullable = true)
+    private Double prezzo;
+
 
     private int durata; // in minuti
     

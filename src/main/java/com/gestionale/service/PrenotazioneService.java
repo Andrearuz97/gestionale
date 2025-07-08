@@ -1,8 +1,6 @@
 package com.gestionale.service;
 
-import com.gestionale.dto.DashboardRiepilogoDTO;
 import com.gestionale.dto.PrenotazioneDTO;
-import com.gestionale.dto.TrattamentoStatDTO;
 import com.gestionale.entity.Cliente;
 import com.gestionale.entity.Prenotazione;
 import com.gestionale.entity.Trattamento;
@@ -14,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PrenotazioneService {
@@ -32,8 +30,12 @@ public class PrenotazioneService {
     }
 
     public Prenotazione salva(Prenotazione p) {
+        if (p.getDataPrenotazione() == null) {
+            p.setDataPrenotazione(LocalDateTime.now());
+        }
         return prenotazioneRepository.save(p);
     }
+
 
     public List<Prenotazione> getAll() {
         return prenotazioneRepository.findAll();
@@ -90,6 +92,7 @@ public class PrenotazioneService {
     public Prenotazione aggiornaDaDTO(Long id, PrenotazioneDTO dto) {
         Prenotazione prenotazione = getById(id);
 
+        prenotazione.setDataPrenotazione(dto.getDataPrenotazione() != null ? dto.getDataPrenotazione() : prenotazione.getDataPrenotazione());
         prenotazione.setDataOra(dto.getDataOra());
         prenotazione.setNote(dto.getNote());
 
@@ -124,9 +127,11 @@ public class PrenotazioneService {
         return prenotazioneRepository.save(prenotazione);
     }
 
+
     public List<Prenotazione> cercaPerNome(String nome) {
-        return prenotazioneRepository.findByNomeContainingIgnoreCase(nome);
+        return prenotazioneRepository.findByCliente_NomeContainingIgnoreCase(nome);
     }
+
 
     public List<Prenotazione> cercaPerData(LocalDate giorno) {
         return prenotazioneRepository.findByDataOraBetween(
@@ -137,46 +142,5 @@ public class PrenotazioneService {
 
     public List<Prenotazione> getStorico() {
         return prenotazioneRepository.findByDataOraBefore(LocalDate.now().atStartOfDay());
-    }
-
-    public long countPrenotazioni() {
-        return prenotazioneRepository.count();
-    }
-
-    public double getTotaleIncassi() {
-        return prenotazioneRepository.findAll().stream()
-                .mapToDouble(p -> {
-                    Double prezzo = p.getTrattamento().getPrezzo();
-                    return prezzo != null ? prezzo : 0.0;
-                }).sum();
-    }
-
-    public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
-        return prenotazioneRepository.findAll().stream()
-                .collect(Collectors.groupingBy(p -> p.getTrattamento().getNome(), Collectors.counting()))
-                .entrySet().stream()
-                .map(e -> new TrattamentoStatDTO(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    public DashboardRiepilogoDTO getRiepilogoDashboard() {
-        long totalePrenotazioni = countPrenotazioni();
-        LocalDate oggi = LocalDate.now();
-
-        long prenotazioniOggi = prenotazioneRepository.findByDataOraBetween(
-                oggi.atStartOfDay(), oggi.plusDays(1).atStartOfDay()
-        ).size();
-
-        double incassoTotale = getTotaleIncassi();
-
-        double incassoOggi = prenotazioneRepository.findByDataOraBetween(
-                oggi.atStartOfDay(), oggi.plusDays(1).atStartOfDay()
-        ).stream()
-                .mapToDouble(p -> {
-                    Double prezzo = p.getTrattamento().getPrezzo();
-                    return prezzo != null ? prezzo : 0.0;
-                }).sum();
-
-        return new DashboardRiepilogoDTO(totalePrenotazioni, prenotazioniOggi, incassoTotale, incassoOggi);
     }
 }

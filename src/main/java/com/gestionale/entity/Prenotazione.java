@@ -18,16 +18,14 @@ public class Prenotazione {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome;
-
-    private String telefono;
-
     @ManyToOne
     @JoinColumn(name = "trattamento_id", nullable = false)
     private Trattamento trattamento;
 
-    private LocalDateTime dataOra;
+    @Column(nullable = false)
+    private LocalDateTime dataPrenotazione; // NUOVO CAMPO
 
+    private LocalDateTime dataOra;
     private String note;
 
     @Enumerated(EnumType.STRING)
@@ -36,7 +34,6 @@ public class Prenotazione {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
-    @JsonIgnoreProperties({"prenotazioni", "utente"}) // ✅ evita loop e permette serializzazione
+    @JsonIgnoreProperties({"prenotazioni", "utente"})
     private Cliente cliente;
-
 }

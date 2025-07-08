@@ -2,6 +2,7 @@ package com.gestionale.controller;
 
 import com.gestionale.dto.DashboardRiepilogoDTO;
 import com.gestionale.dto.TrattamentoStatDTO;
+import com.gestionale.service.DashboardService;
 import com.gestionale.service.PrenotazioneService;
 
 import java.util.List;
@@ -13,29 +14,29 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class DashboardController {
 
-    private final PrenotazioneService prenotazioneService;
+    private final DashboardService dashboardService;
 
-    public DashboardController(PrenotazioneService prenotazioneService) {
-        this.prenotazioneService = prenotazioneService;
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping("/totale-prenotazioni")
     public long getTotalePrenotazioni() {
-        return prenotazioneService.countPrenotazioni();
+        return dashboardService.getRiepilogoDashboard().getTotalePrenotazioni();
     }
 
     @GetMapping("/totale-incassi")
     public double getTotaleIncassi() {
-        return prenotazioneService.getTotaleIncassi();
+        return dashboardService.getRiepilogoDashboard().getIncassoTotale();
     }
 
     @GetMapping("/prenotazioni-per-trattamento")
     public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
-        return prenotazioneService.getPrenotazioniPerTrattamento();
-    }
-    @GetMapping("/riepilogo")
-    public DashboardRiepilogoDTO getRiepilogoDashboard() {
-        return prenotazioneService.getRiepilogoDashboard();
+        return dashboardService.getPrenotazioniPerTrattamento();
     }
 
+    @GetMapping("/riepilogo")
+    public DashboardRiepilogoDTO getRiepilogoDashboard() {
+        return dashboardService.getRiepilogoDashboard();
+    }
 }
