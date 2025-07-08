@@ -3,6 +3,7 @@ package com.gestionale.service;
 import com.gestionale.dto.DashboardRiepilogoDTO;
 import com.gestionale.dto.TrattamentoStatDTO;
 import com.gestionale.entity.Prenotazione;
+import com.gestionale.repository.ClienteRepository;
 import com.gestionale.repository.PrenotazioneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,29 +18,47 @@ import java.util.stream.Collectors;
 public class DashboardService {
 
     private final PrenotazioneRepository prenotazioneRepository;
+    private final ClienteRepository clienteRepository;
 
-    // Ritorna i dati riepilogativi per la dashboard (totali e del giorno)
-    public DashboardRiepilogoDTO getRiepilogoDashboard() {
+    public DashboardRiepilogoDTO getRiepilogoDashboard(String periodo) {
+        LocalDateTime inizioPeriodo = getInizioPeriodo(periodo);
+        LocalDateTime finePeriodo = LocalDateTime.now();
+
         long totalePrenotazioni = prenotazioneRepository.count();
-        LocalDate oggi = LocalDate.now();
-        LocalDateTime inizioGiorno = oggi.atStartOfDay();
-        LocalDateTime fineGiorno = oggi.plusDays(1).atStartOfDay();
+        long prenotazioniPeriodo = prenotazioneRepository.findByDataPrenotazioneBetween(inizioPeriodo, finePeriodo).size();
 
-        // Prenotazioni effettuate oggi (dataPrenotazione)
-        long prenotazioniOggi = prenotazioneRepository
-                .findByDataPrenotazioneBetween(inizioGiorno, fineGiorno)
-                .size();
-
-        // Incassi totali e del giorno (su base dataPrenotazione)
         double incassoTotale = calcolaIncasso(prenotazioneRepository.findAll());
-        double incassoOggi = calcolaIncasso(
-                prenotazioneRepository.findByDataPrenotazioneBetween(inizioGiorno, fineGiorno)
-        );
+        double incassoPeriodo = calcolaIncasso(prenotazioneRepository.findByDataPrenotazioneBetween(inizioPeriodo, finePeriodo));
 
-        return new DashboardRiepilogoDTO(totalePrenotazioni, prenotazioniOggi, incassoTotale, incassoOggi);
+        long totaleClienti = clienteRepository.count();
+        long clientiPeriodo = clienteRepository.countByDataRegistrazioneBetween(inizioPeriodo, finePeriodo);
+
+        System.out.println("👥 Clienti registrati nel periodo: " + clientiPeriodo);
+        System.out.println("🕓 Filtro periodo: " + periodo);
+        System.out.println("📆 Inizio periodo: " + inizioPeriodo);
+        System.out.println("📆 Fine periodo:   " + finePeriodo);
+
+        return new DashboardRiepilogoDTO(
+                totalePrenotazioni,
+                prenotazioniPeriodo,
+                incassoTotale,
+                incassoPeriodo,
+                totaleClienti,
+                clientiPeriodo // <-- questo ora sarà clientiOggi nel DTO
+        );
     }
 
-    // Calcolo dell'incasso totale da una lista di prenotazioni
+    private LocalDateTime getInizioPeriodo(String periodo) {
+        LocalDate oggi = LocalDate.now();
+        return switch (periodo.toLowerCase()) {
+            case "7giorni" -> oggi.minusDays(7).atStartOfDay();
+            case "mese"    -> oggi.minusMonths(1).atStartOfDay();
+            case "anno"    -> oggi.minusYears(1).atStartOfDay();
+            case "tutto"   -> LocalDate.of(2000, 1, 1).atStartOfDay();
+            default        -> oggi.atStartOfDay(); // "oggi"
+        };
+    }
+
     private double calcolaIncasso(List<Prenotazione> prenotazioni) {
         return prenotazioni.stream()
                 .mapToDouble(p -> {
@@ -50,7 +69,6 @@ public class DashboardService {
                 }).sum();
     }
 
-    // Statistiche: numero di prenotazioni per ogni trattamento
     public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
         return prenotazioneRepository.findAll().stream()
                 .filter(p -> p.getTrattamento() != null && p.getTrattamento().getNome() != null)

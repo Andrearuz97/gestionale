@@ -20,23 +20,23 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
+    @GetMapping("/riepilogo")
+    public DashboardRiepilogoDTO getRiepilogoDashboard(@RequestParam(defaultValue = "oggi") String periodo) {
+        return dashboardService.getRiepilogoDashboard(periodo);
+    }
+
     @GetMapping("/totale-prenotazioni")
     public long getTotalePrenotazioni() {
-        return dashboardService.getRiepilogoDashboard().getTotalePrenotazioni();
+        return dashboardService.getRiepilogoDashboard("tutto").getTotalePrenotazioni();
     }
 
     @GetMapping("/totale-incassi")
     public double getTotaleIncassi() {
-        return dashboardService.getRiepilogoDashboard().getIncassoTotale();
+        return dashboardService.getRiepilogoDashboard("tutto").getIncassoTotale();
     }
 
     @GetMapping("/prenotazioni-per-trattamento")
     public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
         return dashboardService.getPrenotazioniPerTrattamento();
-    }
-
-    @GetMapping("/riepilogo")
-    public DashboardRiepilogoDTO getRiepilogoDashboard() {
-        return dashboardService.getRiepilogoDashboard();
     }
 }

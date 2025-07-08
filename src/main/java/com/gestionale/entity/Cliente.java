@@ -3,7 +3,9 @@ package com.gestionale.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import org.hibernate.annotations.CreationTimestamp;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -19,6 +21,10 @@ public class Cliente {
     private String email;
     private String telefono;
     private LocalDate dataNascita;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime dataRegistrazione;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
     @JsonManagedReference
