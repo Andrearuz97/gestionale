@@ -1,6 +1,4 @@
 package com.gestionale.entity;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gestionale.enums.StatoPrenotazione;
 import jakarta.persistence.*;
