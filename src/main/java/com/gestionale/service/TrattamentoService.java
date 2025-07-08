@@ -34,4 +34,21 @@ public class TrattamentoService {
     public List<Trattamento> cercaPerNome(String nome) {
         return repository.findByNomeContainingIgnoreCase(nome);
     }
+    
+    public List<Trattamento> getAttivi() {
+        return repository.findByAttivoTrue();
+    }
+
+    public void disattiva(Long id) {
+        Trattamento t = getById(id);
+        t.setAttivo(false);
+        repository.save(t);
+    }
+
+    public void attiva(Long id) {
+        Trattamento t = getById(id);
+        t.setAttivo(true);
+        repository.save(t);
+    }
+
 }

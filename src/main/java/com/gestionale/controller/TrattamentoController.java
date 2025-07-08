@@ -47,4 +47,20 @@ public class TrattamentoController {
     public List<Trattamento> cercaPerNome(@RequestParam String nome) {
         return service.cercaPerNome(nome);
     }
+    
+    @GetMapping("/attivi")
+    public List<Trattamento> getAttivi() {
+        return service.getAttivi();
+    }
+
+    @PatchMapping("/{id}/disattiva")
+    public void disattiva(@PathVariable Long id) {
+        service.disattiva(id);
+    }
+
+    @PatchMapping("/{id}/attiva")
+    public void attiva(@PathVariable Long id) {
+        service.attiva(id);
+    }
+
 }

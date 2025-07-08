@@ -23,4 +23,8 @@ public class Trattamento {
     private double prezzo;
 
     private int durata; // in minuti
+    
+    @Column(nullable = false)
+    private boolean attivo = true;
+
 }
