@@ -46,7 +46,11 @@ public class AuthController {
             throw new RuntimeException("Email già in uso");
         }
 
-        // Crea cliente
+        if (clienteRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Un cliente con questa email esiste già");
+        }
+
+        // ✅ Crea cliente
         Cliente cliente = new Cliente();
         cliente.setNome(request.getNome());
         cliente.setCognome(request.getCognome());
@@ -55,7 +59,7 @@ public class AuthController {
         cliente.setDataNascita(LocalDate.parse(request.getDataNascita()));
         clienteRepository.save(cliente);
 
-        // Crea utente associato al cliente
+        // ✅ Crea utente associato al cliente
         Utente utente = new Utente();
         utente.setNome(request.getNome());
         utente.setCognome(request.getCognome());
@@ -64,10 +68,11 @@ public class AuthController {
         utente.setRuolo(Ruolo.USER);
         utente.setTelefono(request.getTelefono());
         utente.setDataNascita(LocalDate.parse(request.getDataNascita()));
-        utente.setCliente(cliente); // 💥 link diretto
+        utente.setCliente(cliente);
 
         utenteRepository.save(utente);
 
+        // 🔐 Genera token JWT
         UserDetails userDetails = userDetailsService.loadUserByUsername(utente.getEmail());
         String token = jwtUtils.generateToken(userDetails);
 
@@ -86,6 +91,10 @@ public class AuthController {
         Utente utente = utenteRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Email non trovata"));
 
+        if (!utente.isAttivo()) {
+            throw new RuntimeException("Accesso negato: utente disabilitato.");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), utente.getPassword())) {
             throw new RuntimeException("Password errata");
         }
@@ -102,4 +111,44 @@ public class AuthController {
                 utente.getDataNascita()
         );
     }
+
+    
+    @PostMapping("/promuovi")
+    public AuthResponseDTO promuoviCliente(@RequestParam Long clienteId, @RequestBody RegisterRequest request) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+            .orElseThrow(() -> new RuntimeException("Cliente non trovato"));
+
+        if (cliente.getEmail() == null || cliente.getEmail().isBlank()) {
+            throw new RuntimeException("Il cliente non ha un'email valida");
+        }
+
+        if (utenteRepository.existsByEmail(cliente.getEmail())) {
+            throw new RuntimeException("Esiste già un utente con questa email");
+        }
+
+        Utente utente = new Utente();
+        utente.setNome(cliente.getNome());
+        utente.setCognome(cliente.getCognome());
+        utente.setEmail(cliente.getEmail());
+        utente.setTelefono(cliente.getTelefono());
+        utente.setDataNascita(cliente.getDataNascita());
+        utente.setRuolo(Ruolo.USER);
+        utente.setPassword(passwordEncoder.encode(request.getPassword()));
+        utente.setCliente(cliente);
+
+        utenteRepository.save(utente);
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(utente.getEmail());
+        String token = jwtUtils.generateToken(userDetails);
+
+        return new AuthResponseDTO(
+                token,
+                utente.getNome(),
+                utente.getCognome(),
+                utente.getEmail(),
+                utente.getTelefono(),
+                utente.getDataNascita()
+        );
+    }
+
 }

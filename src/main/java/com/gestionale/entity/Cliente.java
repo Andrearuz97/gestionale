@@ -21,7 +21,8 @@ public class Cliente {
     private String email;
     private String telefono;
     private LocalDate dataNascita;
-
+    private boolean giaUtente;
+    
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime dataRegistrazione;

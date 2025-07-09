@@ -2,13 +2,8 @@ package com.gestionale.security;
 
 import com.gestionale.entity.Utente;
 import com.gestionale.repository.UtenteRepository;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -22,12 +17,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Utente utente = utenteRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
+            .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
 
-        return new User(
-                utente.getEmail(),
-                utente.getPassword(),
-                Collections.emptyList() // puoi aggiungere ruoli/authorities qui se vuoi
-        );
+        if (!utente.isAttivo()) {
+            throw new UsernameNotFoundException("Utente disabilitato");
+        }
+
+        return org.springframework.security.core.userdetails.User
+                .withUsername(utente.getEmail())
+                .password(utente.getPassword())
+                .roles(utente.getRuolo().name())
+                .build();
     }
 }

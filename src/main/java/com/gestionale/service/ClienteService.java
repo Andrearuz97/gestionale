@@ -2,32 +2,35 @@ package com.gestionale.service;
 
 import com.gestionale.dto.ClienteDTO;
 import com.gestionale.entity.Cliente;
+import com.gestionale.entity.Utente;
 import com.gestionale.repository.ClienteRepository;
+import com.gestionale.repository.UtenteRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClienteService {
 
     private final ClienteRepository repository;
+    private final UtenteRepository utenteRepository; // ✅ AGGIUNTO
 
-    public ClienteService(ClienteRepository repository) {
+    // ✅ Costruttore aggiornato
+    public ClienteService(ClienteRepository repository, UtenteRepository utenteRepository) {
         this.repository = repository;
+        this.utenteRepository = utenteRepository;
     }
 
-    // ✅ Salvataggio da entità Cliente
     public Cliente salva(Cliente cliente) {
         return repository.save(cliente);
     }
 
-    // ✅ Salvataggio da DTO
     public Cliente salva(ClienteDTO dto) {
         return repository.save(fromDTO(dto));
     }
 
-    // ✅ Aggiornamento cliente esistente
     public Cliente aggiorna(Long id, ClienteDTO dto) {
         Cliente esistente = getById(id);
         esistente.setNome(dto.getNome());
@@ -38,43 +41,35 @@ public class ClienteService {
         return repository.save(esistente);
     }
 
-    // ✅ Restituisce tutti i clienti
     public List<Cliente> getAll() {
         return repository.findAll();
     }
 
-    // ✅ Cerca cliente per ID
     public Cliente getById(Long id) {
         return repository.findById(id).orElseThrow(() -> new RuntimeException("Cliente non trovato"));
     }
 
-    // ✅ Cancella cliente per ID
     public void cancella(Long id) {
         repository.deleteById(id);
     }
 
-    // ✅ Controlla se esiste già per email
     public boolean existsByEmail(String email) {
         return repository.existsByEmail(email);
     }
 
-    // ✅ Ricerca intelligente per nome, cognome o entrambi
     public List<Cliente> cercaPerNomeOCognome(String input) {
         String query = input.trim();
 
         if (query.contains(" ")) {
-            // Caso: nome + cognome (es. "Andrea Ruzittu")
             String[] parts = query.split("\\s+", 2);
             String nome = parts[0];
             String cognome = parts[1];
             return repository.findByNomeContainingIgnoreCaseAndCognomeContainingIgnoreCase(nome, cognome);
         } else {
-            // Caso: solo nome o solo cognome
             return repository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCase(query, query);
         }
     }
 
-    // ✅ Conversione da DTO a entità
     public Cliente fromDTO(ClienteDTO dto) {
         Cliente c = new Cliente();
         c.setId(dto.getId());
@@ -84,7 +79,6 @@ public class ClienteService {
         c.setTelefono(dto.getTelefono());
         c.setDataNascita(dto.getDataNascita());
 
-        // Setta la data solo se è un nuovo cliente
         if (dto.getId() == null) {
             c.setDataRegistrazione(LocalDateTime.now());
         }
@@ -92,10 +86,7 @@ public class ClienteService {
         return c;
     }
 
-
-
-
-    // ✅ Conversione da entità a DTO
+   
     public ClienteDTO toDTO(Cliente c) {
         ClienteDTO dto = new ClienteDTO();
         dto.setId(c.getId());
@@ -104,6 +95,22 @@ public class ClienteService {
         dto.setEmail(c.getEmail());
         dto.setTelefono(c.getTelefono());
         dto.setDataNascita(c.getDataNascita());
+
+        // 🔍 Verifica se esiste un utente associato a questa email
+        Optional<Utente> maybeUtente = utenteRepository.findByEmail(c.getEmail());
+
+        boolean esisteUtente = maybeUtente.isPresent();
+        boolean isAttivo = maybeUtente.map(Utente::isAttivo).orElse(false);
+
+        dto.setGiaUtente(esisteUtente); // → usato per sapere se mostrare 🚀 o meno
+        dto.setAttivo(isAttivo);        // → usato per sapere se mostrare ❌ o 🔓
+
         return dto;
     }
-}
+
+    }
+
+
+
+    	
+
