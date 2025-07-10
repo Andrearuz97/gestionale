@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,26 +36,17 @@ public class ClienteController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<ClienteDTO> getAll(
-            @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String cognome,
-            @RequestParam(required = false) String nomeCompleto) {
-
+    public List<ClienteDTO> getAll(@RequestParam(required = false) String filtro) {
         List<Cliente> clienti;
 
-        if (nomeCompleto != null && !nomeCompleto.isBlank()) {
-            clienti = service.cercaPerNomeOCognome(nomeCompleto);
-        } else if (nome != null && cognome != null) {
-            clienti = service.cercaPerNomeOCognome(nome + " " + cognome);
-        } else if (nome != null) {
-            clienti = service.cercaPerNomeOCognome(nome);
-        } else if (cognome != null) {
-            clienti = service.cercaPerNomeOCognome(cognome);
+        // Se il filtro è presente, esegui la ricerca sui vari campi
+        if (filtro != null && !filtro.isBlank()) {
+            clienti = service.ricercaSmart(filtro);  // Cerca per nome, cognome, telefono, email
         } else {
-            clienti = service.getAll();
+            clienti = service.getAll();  // Altrimenti restituisci tutti i clienti
         }
 
-        // ✅ Mantiene tutta la ricerca intatta e usa il toDTO GIUSTO che calcola giaUtente correttamente
+        // Restituisci i clienti come DTO
         return clienti.stream()
                 .map(service::toDTO)
                 .collect(Collectors.toList());

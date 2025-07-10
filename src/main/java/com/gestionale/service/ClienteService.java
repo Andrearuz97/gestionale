@@ -107,8 +107,17 @@ public class ClienteService {
 
         return dto;
     }
+    public List<Cliente> ricercaSmart(String filtro) {
+        // Esegui una ricerca OR su nome, cognome, telefono ed email
+        return repository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCase(
+            filtro, filtro, filtro, filtro
+        );
+    }
+
 
     }
+
+    
 
 
 
