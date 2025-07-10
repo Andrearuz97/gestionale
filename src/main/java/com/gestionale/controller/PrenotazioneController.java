@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/prenotazioni")
@@ -58,48 +59,36 @@ public class PrenotazioneController {
         return service.salva(prenotazione);
     }
 
-
     @GetMapping
-    public List<Prenotazione> getPrenotazioniFiltrate(
-            @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String cognome,
-            @RequestParam(required = false) String data,
-            @RequestParam(required = false) String nomeCompleto) {
-
-        List<Prenotazione> prenotazioni = service.getAll();
-
-        return prenotazioni.stream()
+    public List<Prenotazione> getPrenotazioniFiltrate(@RequestParam(required = false) String filtro) {
+        // Se il filtro è presente, applica il filtro a nome, cognome, telefono e data
+        if (filtro != null && !filtro.isBlank()) {
+            return service.getAll().stream()
                 .filter(p -> {
                     Cliente cliente = p.getCliente();
                     if (cliente == null) return false;
 
+                    // Converte tutti i campi in minuscolo per fare una ricerca case-insensitive
                     String nomeCliente = cliente.getNome() != null ? cliente.getNome().toLowerCase() : "";
                     String cognomeCliente = cliente.getCognome() != null ? cliente.getCognome().toLowerCase() : "";
+                    String telefonoCliente = cliente.getTelefono() != null ? cliente.getTelefono() : "";
                     String fullNameCliente = (nomeCliente + " " + cognomeCliente).trim();
+                    String dataPrenotazione = p.getDataOra().toLocalDate().toString();
 
-                    boolean matchNome = (nome == null || nome.isBlank()) || nomeCliente.contains(nome.toLowerCase());
-                    boolean matchCognome = (cognome == null || cognome.isBlank()) || cognomeCliente.contains(cognome.toLowerCase());
-                    boolean matchNomeCompleto = (nomeCompleto == null || nomeCompleto.isBlank()) || fullNameCliente.contains(nomeCompleto.toLowerCase());
-
-                    boolean matchData = true;
-                    if (data != null && !data.isBlank()) {
-                        try {
-                            LocalDate filtroData = LocalDate.parse(data);
-                            matchData = p.getDataOra().toLocalDate().equals(filtroData);
-                        } catch (Exception e) {
-                            matchData = false;
-                        }
-                    }
-
-                    // se nomeCompleto è presente, ignora nome/cognome separati
-                    if (nomeCompleto != null && !nomeCompleto.isBlank()) {
-                        return matchNomeCompleto && matchData;
-                    } else {
-                        return matchNome && matchCognome && matchData;
-                    }
+                    // Verifica se il filtro corrisponde a uno dei campi
+                    return nomeCliente.contains(filtro.toLowerCase()) || 
+                           cognomeCliente.contains(filtro.toLowerCase()) || 
+                           fullNameCliente.contains(filtro.toLowerCase()) ||
+                           telefonoCliente.contains(filtro) ||
+                           dataPrenotazione.contains(filtro);
                 })
-                .toList();
+                .collect(Collectors.toList());
+        } else {
+            // Se non c'è filtro, restituisci tutte le prenotazioni
+            return service.getAll();
+        }
     }
+
 
 
 
