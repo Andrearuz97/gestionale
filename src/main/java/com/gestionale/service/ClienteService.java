@@ -1,6 +1,7 @@
 package com.gestionale.service;
 
 import com.gestionale.dto.ClienteDTO;
+import com.gestionale.dto.ClienteInputDTO;
 import com.gestionale.entity.Cliente;
 import com.gestionale.entity.Utente;
 import com.gestionale.repository.ClienteRepository;
@@ -15,30 +16,25 @@ import java.util.Optional;
 public class ClienteService {
 
     private final ClienteRepository repository;
-    private final UtenteRepository utenteRepository; // ✅ AGGIUNTO
+    private final UtenteRepository utenteRepository;
 
-    // ✅ Costruttore aggiornato
     public ClienteService(ClienteRepository repository, UtenteRepository utenteRepository) {
         this.repository = repository;
         this.utenteRepository = utenteRepository;
     }
 
-    public Cliente salva(Cliente cliente) {
-        return repository.save(cliente);
+    public Cliente salva(ClienteInputDTO dto) {
+        return repository.save(fromInputDTO(dto));
     }
 
-    public Cliente salva(ClienteDTO dto) {
-        return repository.save(fromDTO(dto));
-    }
-
-    public Cliente aggiorna(Long id, ClienteDTO dto) {
+    public Cliente aggiorna(Long id, ClienteInputDTO dto) {
         Cliente esistente = getById(id);
         esistente.setNome(dto.getNome());
         esistente.setCognome(dto.getCognome());
         esistente.setEmail(dto.getEmail());
         esistente.setTelefono(dto.getTelefono());
         esistente.setDataNascita(dto.getDataNascita());
-        esistente.setNote(dto.getNote()); // ✅ IMPORTANTISSIMO
+        esistente.setNote(dto.getNote());
         return repository.save(esistente);
     }
 
@@ -63,15 +59,13 @@ public class ClienteService {
 
         if (query.contains(" ")) {
             String[] parts = query.split("\\s+", 2);
-            String nome = parts[0];
-            String cognome = parts[1];
-            return repository.findByNomeContainingIgnoreCaseAndCognomeContainingIgnoreCase(nome, cognome);
+            return repository.findByNomeContainingIgnoreCaseAndCognomeContainingIgnoreCase(parts[0], parts[1]);
         } else {
             return repository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCase(query, query);
         }
     }
 
-    public Cliente fromDTO(ClienteDTO dto) {
+    public Cliente fromInputDTO(ClienteInputDTO dto) {
         Cliente c = new Cliente();
         c.setId(dto.getId());
         c.setNome(dto.getNome());
@@ -79,17 +73,14 @@ public class ClienteService {
         c.setEmail(dto.getEmail());
         c.setTelefono(dto.getTelefono());
         c.setDataNascita(dto.getDataNascita());
-        c.setNote(dto.getNote()); // ✅ AGGIUNTO
+        c.setNote(dto.getNote());
 
         if (dto.getId() == null) {
             c.setDataRegistrazione(LocalDateTime.now());
         }
-
         return c;
     }
 
-
-   
     public ClienteDTO toDTO(Cliente c) {
         ClienteDTO dto = new ClienteDTO();
         dto.setId(c.getId());
@@ -98,33 +89,23 @@ public class ClienteService {
         dto.setEmail(c.getEmail());
         dto.setTelefono(c.getTelefono());
         dto.setDataNascita(c.getDataNascita());
-        dto.setNote(c.getNote()); // ✅ AGGIUNTO
+        dto.setNote(c.getNote());
         dto.setStoricoPrenotazioni(c.getPrenotazioni());
 
         Optional<Utente> maybeUtente = utenteRepository.findByEmail(c.getEmail());
-
-        boolean esisteUtente = maybeUtente.isPresent();
-        boolean isAttivo = maybeUtente.map(Utente::isAttivo).orElse(false);
-
-        dto.setGiaUtente(esisteUtente);
-        dto.setAttivo(isAttivo);
+        dto.setGiaUtente(maybeUtente.isPresent());
+        dto.setAttivo(maybeUtente.map(Utente::isAttivo).orElse(false));
 
         return dto;
     }
 
     public List<Cliente> ricercaSmart(String filtro) {
-        // Esegui una ricerca OR su nome, cognome, telefono ed email
         return repository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCase(
-            filtro, filtro, filtro, filtro
+                filtro, filtro, filtro, filtro
         );
     }
-
-
+    public Cliente salvaFromEntity(Cliente cliente) {
+        return repository.save(cliente);
     }
 
-    
-
-
-
-    	
-
+}

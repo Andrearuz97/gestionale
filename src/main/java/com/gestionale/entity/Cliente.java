@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -29,7 +31,13 @@ public class Cliente {
     @Column(updatable = false)
     private LocalDateTime dataRegistrazione;
 
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<Prenotazione> prenotazioni;
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    
+    @JsonBackReference
+    private Cliente cliente;
+
 }
