@@ -99,6 +99,7 @@ public class ClienteService {
         dto.setTelefono(c.getTelefono());
         dto.setDataNascita(c.getDataNascita());
         dto.setNote(c.getNote()); // ✅ AGGIUNTO
+        dto.setStoricoPrenotazioni(c.getPrenotazioni());
 
         Optional<Utente> maybeUtente = utenteRepository.findByEmail(c.getEmail());
 

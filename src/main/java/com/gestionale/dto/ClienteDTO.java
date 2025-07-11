@@ -2,6 +2,9 @@ package com.gestionale.dto;
 
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.List;
+
+import com.gestionale.entity.Prenotazione;
 
 @Data
 public class ClienteDTO {
@@ -14,6 +17,8 @@ public class ClienteDTO {
     private boolean giaUtente;
     private Boolean attivo;
     private String note;
+    private List<Prenotazione> storicoPrenotazioni;
+
 
 
 
