@@ -73,19 +73,31 @@ public class ClienteController {
     @PostMapping("/{id}/promuovi-a-utente")
     public String promuoviAUtente(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String password = body.get("password");
+
+        // Controlla se la password è valida
         if (password == null || password.length() < 4) {
             return "❌ Password troppo corta o mancante.";
         }
 
+        // Recupera il cliente
         Cliente cliente = service.getById(id);
+
+        // Verifica se il cliente esiste nel database
         if (cliente == null) {
             return "❌ Cliente non trovato.";
         }
 
+        // Verifica se esiste già un utente con questa email
         if (utenteRepository.existsByEmail(cliente.getEmail())) {
             return "❌ Esiste già un utente con questa email.";
         }
 
+        // Salva il cliente se non è già presente (opzionale)
+        if (cliente.getId() == null) {
+            cliente = service.salva(cliente);
+        }
+
+        // Crea l'utente associando il cliente
         Utente utente = new Utente();
         utente.setNome(cliente.getNome());
         utente.setCognome(cliente.getCognome());
@@ -94,12 +106,15 @@ public class ClienteController {
         utente.setDataNascita(cliente.getDataNascita());
         utente.setRuolo(Ruolo.USER);
         utente.setPassword(passwordEncoder.encode(password));
-        utente.setCliente(cliente);
+        utente.setCliente(cliente);  // Associa il cliente all'utente
 
+        // Salva l'utente nel database
         utenteRepository.save(utente);
 
         return "✅ Cliente promosso a utente!";
     }
+
+
     @PutMapping("/{id}/revoca-utente")
     public String revocaUtente(@PathVariable Long id) {
         Cliente cliente = service.getById(id);
