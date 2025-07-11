@@ -38,6 +38,7 @@ public class ClienteService {
         esistente.setEmail(dto.getEmail());
         esistente.setTelefono(dto.getTelefono());
         esistente.setDataNascita(dto.getDataNascita());
+        esistente.setNote(dto.getNote()); // ✅ IMPORTANTISSIMO
         return repository.save(esistente);
     }
 
@@ -78,6 +79,7 @@ public class ClienteService {
         c.setEmail(dto.getEmail());
         c.setTelefono(dto.getTelefono());
         c.setDataNascita(dto.getDataNascita());
+        c.setNote(dto.getNote()); // ✅ AGGIUNTO
 
         if (dto.getId() == null) {
             c.setDataRegistrazione(LocalDateTime.now());
@@ -85,6 +87,7 @@ public class ClienteService {
 
         return c;
     }
+
 
    
     public ClienteDTO toDTO(Cliente c) {
@@ -95,18 +98,19 @@ public class ClienteService {
         dto.setEmail(c.getEmail());
         dto.setTelefono(c.getTelefono());
         dto.setDataNascita(c.getDataNascita());
+        dto.setNote(c.getNote()); // ✅ AGGIUNTO
 
-        // 🔍 Verifica se esiste un utente associato a questa email
         Optional<Utente> maybeUtente = utenteRepository.findByEmail(c.getEmail());
 
         boolean esisteUtente = maybeUtente.isPresent();
         boolean isAttivo = maybeUtente.map(Utente::isAttivo).orElse(false);
 
-        dto.setGiaUtente(esisteUtente); // → usato per sapere se mostrare 🚀 o meno
-        dto.setAttivo(isAttivo);        // → usato per sapere se mostrare ❌ o 🔓
+        dto.setGiaUtente(esisteUtente);
+        dto.setAttivo(isAttivo);
 
         return dto;
     }
+
     public List<Cliente> ricercaSmart(String filtro) {
         // Esegui una ricerca OR su nome, cognome, telefono ed email
         return repository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCase(

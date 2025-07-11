@@ -13,6 +13,8 @@ public class ClienteDTO {
     private LocalDate dataNascita;
     private boolean giaUtente;
     private Boolean attivo;
+    private String note;
+
 
 
 }
