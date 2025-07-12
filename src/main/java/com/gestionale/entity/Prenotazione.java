@@ -26,6 +26,8 @@ public class Prenotazione {
     private LocalDateTime dataPrenotazione; // NUOVO CAMPO
 
     private LocalDateTime dataOra;
+    
+    @Column(length = 1000)
     private String note;
 
     @Enumerated(EnumType.STRING)

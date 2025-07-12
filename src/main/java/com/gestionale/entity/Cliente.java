@@ -24,7 +24,9 @@ public class Cliente {
     private String telefono;
     private LocalDate dataNascita;
     private boolean giaUtente;
+    @Column(length = 1000)
     private String note;
+
 
     @CreationTimestamp
     @Column(updatable = false)
