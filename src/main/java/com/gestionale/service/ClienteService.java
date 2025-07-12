@@ -100,10 +100,16 @@ public class ClienteService {
     }
 
     public List<Cliente> ricercaSmart(String filtro) {
-        return repository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                filtro, filtro, filtro, filtro
-        );
+        if (filtro != null && filtro.trim().contains(" ")) {
+            String[] parts = filtro.trim().split("\\s+", 2);
+            return repository.findByNomeContainingIgnoreCaseAndCognomeContainingIgnoreCase(parts[0], parts[1]);
+        } else {
+            return repository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCaseOrTelefonoContainingIgnoreCaseOrEmailContainingIgnoreCase(
+                    filtro, filtro, filtro, filtro
+            );
+        }
     }
+
     public Cliente salvaFromEntity(Cliente cliente) {
         return repository.save(cliente);
     }

@@ -26,7 +26,6 @@ public class Cliente {
     private boolean giaUtente;
     private String note;
 
-    
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime dataRegistrazione;
@@ -34,10 +33,5 @@ public class Cliente {
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<Prenotazione> prenotazioni;
-    @ManyToOne
-    @JoinColumn(name = "cliente_id")
-    
-    @JsonBackReference
-    private Cliente cliente;
 
 }
