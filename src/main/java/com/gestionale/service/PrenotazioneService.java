@@ -8,6 +8,9 @@ import com.gestionale.enums.StatoPrenotazione;
 import com.gestionale.repository.ClienteRepository;
 import com.gestionale.repository.PrenotazioneRepository;
 import com.gestionale.repository.TrattamentoRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,9 +58,19 @@ public class PrenotazioneService {
         return clienteRepository.save(cliente);
     }
 
+    @Transactional
     public void cancella(Long id) {
-        prenotazioneRepository.deleteById(id);
+        Prenotazione prenotazione = prenotazioneRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Prenotazione non trovata"));
+
+        Cliente cliente = prenotazione.getCliente();
+        if (cliente != null && cliente.getPrenotazioni() != null) {
+            cliente.getPrenotazioni().removeIf(p -> p.getId().equals(id));
+        }
+
+        prenotazioneRepository.delete(prenotazione);
     }
+
 
     public Prenotazione aggiorna(Long id, Prenotazione nuova) {
         Prenotazione esistente = getById(id);

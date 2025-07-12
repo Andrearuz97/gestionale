@@ -2,6 +2,9 @@ package com.gestionale.service;
 
 import com.gestionale.entity.Trattamento;
 import com.gestionale.repository.TrattamentoRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,9 +30,18 @@ public class TrattamentoService {
         return repository.findById(id).orElseThrow(() -> new RuntimeException("Trattamento non trovato"));
     }
 
+    @Transactional
     public void cancella(Long id) {
-        repository.deleteById(id);
+        Trattamento trattamento = getById(id);
+
+        long prenotazioniCollegate = repository.countPrenotazioniByTrattamentoId(id);
+        if (prenotazioniCollegate > 0) {
+            throw new RuntimeException("Non puoi eliminare il trattamento. Esistono ancora prenotazioni collegate.");
+        }
+
+        repository.delete(trattamento);
     }
+
 
     public List<Trattamento> cercaPerNome(String nome) {
         return repository.findByNomeContainingIgnoreCase(nome);
