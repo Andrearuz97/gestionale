@@ -9,9 +9,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DashboardRiepilogoDTO {
     private long totalePrenotazioni;
-    private long prenotazioniOggi;
+    private long prenotazioniPeriodo;
     private double incassoTotale;
-    private double incassoOggi;
+    private double incassoPeriodo;
     private long totaleClienti;
-    private long clientiOggi;
+    private long clientiPeriodo;
+
+    private long prenotazioniCreate;
+    private long prenotazioniConfermate;
+    private long prenotazioniCompletate;
+    private long prenotazioniAnnullate;
 }

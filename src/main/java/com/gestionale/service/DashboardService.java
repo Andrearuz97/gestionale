@@ -3,6 +3,7 @@ package com.gestionale.service;
 import com.gestionale.dto.DashboardRiepilogoDTO;
 import com.gestionale.dto.TrattamentoStatDTO;
 import com.gestionale.entity.Prenotazione;
+import com.gestionale.enums.StatoPrenotazione;
 import com.gestionale.repository.ClienteRepository;
 import com.gestionale.repository.PrenotazioneRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,19 +25,28 @@ public class DashboardService {
         LocalDateTime inizioPeriodo = getInizioPeriodo(periodo);
         LocalDateTime finePeriodo = LocalDateTime.now();
 
-        long totalePrenotazioni = prenotazioneRepository.count();
-        long prenotazioniPeriodo = prenotazioneRepository.findByDataPrenotazioneBetween(inizioPeriodo, finePeriodo).size();
+        List<Prenotazione> tutte = prenotazioneRepository.findAll();
+        List<Prenotazione> nelPeriodo = prenotazioneRepository.findByDataPrenotazioneBetween(inizioPeriodo, finePeriodo);
 
-        double incassoTotale = calcolaIncasso(prenotazioneRepository.findAll());
-        double incassoPeriodo = calcolaIncasso(prenotazioneRepository.findByDataPrenotazioneBetween(inizioPeriodo, finePeriodo));
-
+        // Dati globali
+        long totalePrenotazioni = tutte.size();
+        double incassoTotale = calcolaIncasso(
+            tutte.stream().filter(p -> p.getStato() == StatoPrenotazione.COMPLETATA).toList()
+        );
         long totaleClienti = clienteRepository.count();
+
+        // Dati del periodo
+        long prenotazioniPeriodo = nelPeriodo.size();
+        double incassoPeriodo = calcolaIncasso(
+            nelPeriodo.stream().filter(p -> p.getStato() == StatoPrenotazione.COMPLETATA).toList()
+        );
         long clientiPeriodo = clienteRepository.countByDataRegistrazioneBetween(inizioPeriodo, finePeriodo);
 
-        System.out.println("👥 Clienti registrati nel periodo: " + clientiPeriodo);
-        System.out.println("🕓 Filtro periodo: " + periodo);
-        System.out.println("📆 Inizio periodo: " + inizioPeriodo);
-        System.out.println("📆 Fine periodo:   " + finePeriodo);
+        // Conteggio stati nel periodo
+        long create = countByStato(nelPeriodo, StatoPrenotazione.CREATA);
+        long confermate = countByStato(nelPeriodo, StatoPrenotazione.CONFERMATA);
+        long completate = countByStato(nelPeriodo, StatoPrenotazione.COMPLETATA);
+        long annullate = countByStato(nelPeriodo, StatoPrenotazione.ANNULLATA);
 
         return new DashboardRiepilogoDTO(
                 totalePrenotazioni,
@@ -44,8 +54,16 @@ public class DashboardService {
                 incassoTotale,
                 incassoPeriodo,
                 totaleClienti,
-                clientiPeriodo // <-- questo ora sarà clientiOggi nel DTO
+                clientiPeriodo,
+                create,
+                confermate,
+                completate,
+                annullate
         );
+    }
+
+    private long countByStato(List<Prenotazione> prenotazioni, StatoPrenotazione stato) {
+        return prenotazioni.stream().filter(p -> p.getStato() == stato).count();
     }
 
     private LocalDateTime getInizioPeriodo(String periodo) {
@@ -55,18 +73,16 @@ public class DashboardService {
             case "mese"    -> oggi.minusMonths(1).atStartOfDay();
             case "anno"    -> oggi.minusYears(1).atStartOfDay();
             case "tutto"   -> LocalDate.of(2000, 1, 1).atStartOfDay();
-            default        -> oggi.atStartOfDay(); // "oggi"
+            default        -> oggi.atStartOfDay(); // oggi
         };
     }
 
     private double calcolaIncasso(List<Prenotazione> prenotazioni) {
         return prenotazioni.stream()
-                .mapToDouble(p -> {
-                    if (p.getTrattamento() != null && p.getTrattamento().getPrezzo() != null) {
-                        return p.getTrattamento().getPrezzo();
-                    }
-                    return 0.0;
-                }).sum();
+                .mapToDouble(p -> p.getTrattamento() != null && p.getTrattamento().getPrezzo() != null
+                        ? p.getTrattamento().getPrezzo()
+                        : 0.0)
+                .sum();
     }
 
     public List<TrattamentoStatDTO> getPrenotazioniPerTrattamento() {
