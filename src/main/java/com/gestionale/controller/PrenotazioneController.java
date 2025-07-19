@@ -127,8 +127,9 @@ public class PrenotazioneController {
     }
     @PostMapping("/controlla-disponibilita")
     public boolean controllaDisponibilita(@RequestBody PrenotazioneDTO dto) {
-        return service.controllaDisponibilita(dto.getDataOra(), dto.getTrattamentoId(), dto.getClienteId());
+        return service.controllaDisponibilita(dto.getDataOra(), dto.getTrattamentoId(), dto.getId());
     }
+
 
     }
     

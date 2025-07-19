@@ -12,6 +12,7 @@ public class PrenotazioneDTO {
     private String email;
     private String telefono;
     private String dataNascita;
+    private Long id;
 
     private LocalDateTime dataPrenotazione; // NUOVO CAMPO
     private LocalDateTime dataOra;
