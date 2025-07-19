@@ -10,6 +10,7 @@ import com.gestionale.service.PrenotazioneService;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,4 +125,12 @@ public class PrenotazioneController {
     public List<Prenotazione> storico() {
         return service.getStorico();
     }
-}
+    @PostMapping("/controlla-disponibilita")
+    public boolean controllaDisponibilita(@RequestBody PrenotazioneDTO dto) {
+        return service.controllaDisponibilita(dto.getDataOra(), dto.getTrattamentoId(), dto.getClienteId());
+    }
+
+    }
+    
+
+

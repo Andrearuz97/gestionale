@@ -36,8 +36,29 @@ public class PrenotazioneService {
         if (p.getDataPrenotazione() == null) {
             p.setDataPrenotazione(LocalDateTime.now());
         }
+
+        LocalDateTime inizio = p.getDataOra();
+        int durata = p.getTrattamento().getDurata();
+        LocalDateTime fine = inizio.plusMinutes(durata);
+
+        List<Prenotazione> prenotazioniGiornata = prenotazioneRepository.findByDataOraBetween(
+                inizio.toLocalDate().atStartOfDay(),
+                inizio.toLocalDate().plusDays(1).atStartOfDay()
+        );
+
+        boolean sovrapposta = prenotazioniGiornata.stream().anyMatch(esistente -> {
+            LocalDateTime esInizio = esistente.getDataOra();
+            LocalDateTime esFine = esInizio.plusMinutes(esistente.getTrattamento().getDurata());
+            return (inizio.isBefore(esFine) && fine.isAfter(esInizio));
+        });
+
+        if (sovrapposta) {
+            throw new RuntimeException("Orario non disponibile. Esiste già una prenotazione in quel periodo.");
+        }
+
         return prenotazioneRepository.save(p);
     }
+
 
 
     public List<Prenotazione> getAll() {
@@ -105,16 +126,35 @@ public class PrenotazioneService {
     public Prenotazione aggiornaDaDTO(Long id, PrenotazioneDTO dto) {
         Prenotazione prenotazione = getById(id);
 
-        prenotazione.setDataPrenotazione(dto.getDataPrenotazione() != null ? dto.getDataPrenotazione() : prenotazione.getDataPrenotazione());
+        LocalDateTime nuovoInizio = dto.getDataOra();
+        int nuovaDurata = trattamentoRepository.findById(dto.getTrattamentoId())
+                .orElseThrow(() -> new RuntimeException("Trattamento non trovato"))
+                .getDurata();
+        LocalDateTime nuovoFine = nuovoInizio.plusMinutes(nuovaDurata);
+
+        List<Prenotazione> prenotazioniGiornata = prenotazioneRepository.findByDataOraBetween(
+                nuovoInizio.toLocalDate().atStartOfDay(),
+                nuovoInizio.toLocalDate().plusDays(1).atStartOfDay()
+        );
+
+        boolean sovrapposta = prenotazioniGiornata.stream()
+                .filter(p -> !p.getId().equals(id))
+                .anyMatch(p -> {
+                    LocalDateTime inizio = p.getDataOra();
+                    LocalDateTime fine = inizio.plusMinutes(p.getTrattamento().getDurata());
+                    return nuovoInizio.isBefore(fine) && nuovoFine.isAfter(inizio);
+                });
+
+        if (sovrapposta) {
+            throw new RuntimeException("Orario non disponibile. Esiste già una prenotazione in quel periodo.");
+        }
+
         prenotazione.setDataOra(dto.getDataOra());
         prenotazione.setNote(dto.getNote());
+        prenotazione.setDataPrenotazione(dto.getDataPrenotazione() != null ? dto.getDataPrenotazione() : prenotazione.getDataPrenotazione());
 
         if (dto.getStato() != null && !dto.getStato().isEmpty()) {
-            try {
-                prenotazione.setStato(StatoPrenotazione.valueOf(dto.getStato()));
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Stato non valido: " + dto.getStato());
-            }
+            prenotazione.setStato(StatoPrenotazione.valueOf(dto.getStato()));
         }
 
         if (dto.getTrattamentoId() != null) {
@@ -126,19 +166,18 @@ public class PrenotazioneService {
         if (dto.getClienteId() != null) {
             Cliente cliente = clienteRepository.findById(dto.getClienteId())
                     .orElseThrow(() -> new RuntimeException("Cliente non trovato"));
-
             cliente.setNome(dto.getNome());
             cliente.setCognome(dto.getCognome());
             cliente.setTelefono(dto.getTelefono());
             cliente.setEmail(dto.getEmail());
             cliente.setDataNascita(LocalDate.parse(dto.getDataNascita()));
-
             clienteRepository.save(cliente);
             prenotazione.setCliente(cliente);
         }
 
         return prenotazioneRepository.save(prenotazione);
     }
+
 
 
     public List<Prenotazione> cercaPerNome(String nome) {
@@ -156,4 +195,40 @@ public class PrenotazioneService {
     public List<Prenotazione> getStorico() {
         return prenotazioneRepository.findByDataOraBefore(LocalDate.now().atStartOfDay());
     }
+    public boolean controllaDisponibilita(LocalDateTime dataOra, int durata) {
+        LocalDateTime fine = dataOra.plusMinutes(durata);
+
+        List<Prenotazione> prenotazioniGiornata = prenotazioneRepository.findByDataOraBetween(
+                dataOra.toLocalDate().atStartOfDay(),
+                dataOra.toLocalDate().plusDays(1).atStartOfDay()
+        );
+
+        return prenotazioniGiornata.stream().noneMatch(p -> {
+            LocalDateTime esInizio = p.getDataOra();
+            LocalDateTime esFine = esInizio.plusMinutes(p.getTrattamento().getDurata());
+            return dataOra.isBefore(esFine) && fine.isAfter(esInizio);
+        });
+    }
+    public boolean controllaDisponibilita(LocalDateTime dataOra, Long trattamentoId, Long prenotazioneIdEscludere) {
+        int durata = trattamentoRepository.findById(trattamentoId)
+                .orElseThrow(() -> new RuntimeException("Trattamento non trovato"))
+                .getDurata();
+
+        LocalDateTime fine = dataOra.plusMinutes(durata);
+
+        List<Prenotazione> prenotazioni = prenotazioneRepository.findByDataOraBetween(
+                dataOra.toLocalDate().atStartOfDay(),
+                dataOra.toLocalDate().plusDays(1).atStartOfDay()
+        );
+
+        return prenotazioni.stream()
+                .filter(p -> prenotazioneIdEscludere == null || !p.getId().equals(prenotazioneIdEscludere))
+                .noneMatch(p -> {
+                    LocalDateTime inizio = p.getDataOra();
+                    LocalDateTime fineEsistente = inizio.plusMinutes(p.getTrattamento().getDurata());
+                    return dataOra.isBefore(fineEsistente) && fine.isAfter(inizio);
+                });
+    }
+
+
 }
