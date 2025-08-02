@@ -18,6 +18,7 @@ public class Trattamento {
     @Column(nullable = false)
     private String nome;
 
+    @Column(length = 1000)
     private String descrizione;
 
     @Column(nullable = true)
