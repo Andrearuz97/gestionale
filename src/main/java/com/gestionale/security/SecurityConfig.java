@@ -31,13 +31,15 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/**").permitAll() // 🔓 Disattiva restrizioni
+                .requestMatchers("/api/auth/**").permitAll() // login, register: accesso pubblico
+                .anyRequest().authenticated()               // tutto il resto: richiede autenticazione
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-            // ❌ NON aggiungiamo il filtro JWT
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // ✅ aggiungi il filtro qui
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

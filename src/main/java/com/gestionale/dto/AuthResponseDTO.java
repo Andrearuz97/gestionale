@@ -17,4 +17,3 @@ public class AuthResponseDTO {
     private String telefono;
     private LocalDate dataNascita; 
 }
-
